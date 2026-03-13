@@ -1,0 +1,32 @@
+[workspace]
+members = [
+    ".",
+    "libs/ridge-core"
+]
+
+
+[package]
+name = "rust-server"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+ridge-core = { path = "libs/ridge-core" }
+axum = "0.8.8"
+chrono = "0.4.43"
+const_format = "0.2.35"
+dotenvy = "0.15.7"
+hyper = "1.8.1"
+rscx = "0.1.14"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+tera = "1.20.1"
+tokio = { version = "1.49.0", features = ["full"] }
+tower = "0.5.3"
+tower-http = { version = "0.6.8", features = ["fs", "trace"] }
+trace = "0.1.7"
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.22", features = ["env-filter", "fmt"] } 
+walkdir = "2.5.0"
+lightningcss = "1.0.0-alpha.71"
+swc_core = "58.0.4"

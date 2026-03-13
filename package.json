@@ -1,0 +1,20 @@
+{
+  "name": "own",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "cargo": "cargo run",
+    "tailwind": "./tailwindcss -i assets/styles/input.css -o public/dist/styles/styles.css --watch",
+    "build": "npx esbuild assets/js/main.ts --bundle --outfile=public/dist/js/bundle.js --format=esm"
+  },
+  "devDependencies": {
+    "tailwindcss": "^4.1.18"
+  },
+  "dependencies": {
+    "git-filter-repo": "^0.0.30"
+  }
+}
