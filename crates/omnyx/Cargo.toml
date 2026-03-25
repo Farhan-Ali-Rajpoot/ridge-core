@@ -1,13 +1,17 @@
 [package]
 name = "omnyx"
-version = "0.1.0"
+version = "0.0.12"
 edition = "2024"
+description = "Omnyx - Web Framework With Nextjs like Routing"
+license = "MIT"
+repository = "https://github.com/Farhan-Ali-Rajpoot/ridge-core/crates/omnyx"
+readme = "README.md"
 
 
 [dependencies]
 # The core web engine
 axum = "0.7"
-tokio = { version = "1", features = ["full"] }
+tokio = { version = "1.50.0", features = ["full"] }
 tower = "0.4"
 tower-http = { version = "0.5", features = ["full"] }
 async-trait = "0.1.89"
@@ -21,5 +25,9 @@ rscx = "0.1.14"
 const_format = "0.2.35"
 tracing = "0.1.44"
 thiserror = "1"
-matchit = "0.8"
+matchit = "0.9.1"
 axum-extra = { version = "0.12.5", features = ["cookie"] }
+lightningcss = "1.0.0-alpha.71"
+swc_core = "58.0.4"
+bytes = "1.11.1"
+percent-encoding = "2.3.2"

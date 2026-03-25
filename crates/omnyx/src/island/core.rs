@@ -2,7 +2,7 @@ use std::sync::Arc;
 use std::collections::HashMap;
 use serde_json::Value;
 
-use crate::core::RidgeCore;
+use crate::core::OmnyxCore;
 
 
 #[derive(Clone)]
@@ -27,5 +27,5 @@ pub enum HydrationStrategy {
 pub enum PropsSource {
     Static(Value),
     FromLoader(String),
-    Dynamic(Arc<dyn Fn(&RidgeCore) -> Value + Send + Sync>)
+    Dynamic(Arc<dyn Fn(&OmnyxCore) -> Value + Send + Sync>)
 }

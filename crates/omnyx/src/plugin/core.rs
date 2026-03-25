@@ -4,14 +4,14 @@ use async_trait::async_trait;
 use serde_json::Value;
 use axum::response::Response;
 
-use crate::core::RidgeCore;
+use crate::core::OmnyxCore;
 use crate::core::router::RouteTree;
 use crate::render::pipeline::ResponsePipeline;
 use crate::core::router::metadata::RouteMetadata;
 
 
 #[async_trait]
-pub trait RidgePlugin: Send + Sync + 'static {
+pub trait OmnyxPlugin: Send + Sync + 'static {
 
     async fn on_build(
         &self, 
@@ -22,7 +22,7 @@ pub trait RidgePlugin: Send + Sync + 'static {
 
     async fn on_request(
         &self,
-        core: &RidgeCore,
+        core: &OmnyxCore,
     ) -> Option<Response>;
 
     fn config(&self) -> Option<&PluginConfig>;

@@ -4,40 +4,25 @@ use async_trait::async_trait;
 use axum::http::Method;
 use serde_json::Value;
 
-use crate::core::router::{RouteNode, PathSegment, PageAction};
-use crate::render::page::PageComponent;
-use crate::render::{RenderMode};
-use crate::core::router::metadata::RouteMetadata;
-use crate::loader::DataLoader;
 use crate::builder::code::CodeRouteBuilder;
-use crate::middleware::RidgeMiddleware;
+use crate::core::router::registry::{RouteNode};
+use crate::core::router::tree::Path;
+use crate::core::router::handlers::{PageComponent, ErrorComponent};
+use crate::core::router::logic::{DataLoader, Middleware, RouteMetadata};
 
 
 pub struct PageDefinition {
-    pub segment: PathSegment,
+    pub path: Path,
     pub handlers: HashMap<Method, Arc<dyn PageComponent>>,
+    pub error_handlers: HashMap<Method, Arc<dyn ErrorComponent>>,
     pub metadata: RouteMetadata,
     pub children: Vec<RouteNode>,
     pub loaders: Vec<Arc<dyn DataLoader>>,
     pub extensions: HashMap<String, Value>,
-    pub middlewares: Vec<Arc<dyn RidgeMiddleware + Send + Sync>>,
+    pub middlewares: Vec<Arc<dyn Middleware + Send + Sync>>,
 }
 
 impl PageDefinition {
-     // Standard Methods
-    // Usage: .get(handler), .post(handler) ...etc
-    apply_shortcut_method_function!(PageComponent {
-        get     => "GET",
-        post    => "POST",
-        put     => "PUT",
-        delete  => "DELETE",
-        patch   => "PATCH",
-        head    => "HEAD",
-        options => "OPTIONS",
-        connect => "CONNECT",
-        trace   => "TRACE", 
-    });
-
     // Custom Methods
     // Usage: .method("FARHAN", handler)
     pub fn method<H: PageComponent + 'static>(mut self, verb: &str, handler: H) -> Self {
@@ -48,7 +33,15 @@ impl PageDefinition {
         self
     }
 
-    pub fn middleware<M: RidgeMiddleware + Send + Sync + 'static>(mut self, middleware: M) -> Self {
+    pub fn error_method<H: ErrorComponent + 'static>(mut self, verb: &str, handler: H) -> Self {
+        let m = Method::from_bytes(verb.to_uppercase().as_bytes())
+            .expect("Invalid HTTP method string");
+            
+        self.error_handlers.insert(m, Arc::new(handler));
+        self
+    }
+
+    pub fn middleware<M: Middleware + Send + Sync + 'static>(mut self, middleware: M) -> Self {
         self.middlewares.push(Arc::new(middleware));
         self
     }
@@ -66,8 +59,9 @@ impl PageDefinition {
 
     pub fn finish(mut self, builder: &mut CodeRouteBuilder) {
         let node = RouteNode::Page {
-            segment: self.segment,
+            path: self.path,
             handlers: self.handlers,
+            error_handlers: self.error_handlers,
             metadata: self.metadata,
             children: self.children,
             loaders: self.loaders,

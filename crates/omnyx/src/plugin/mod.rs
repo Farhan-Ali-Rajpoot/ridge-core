@@ -2,4 +2,4 @@ pub mod core;
 
 
 
-pub use core::{RidgePlugin};
+pub use core::*;

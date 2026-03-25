@@ -3,35 +3,24 @@ use std::sync::Arc;
 use axum::http::Method;
 use serde_json::Value;
 
-use crate::core::router::{PathSegment, ApiHandler};
-use crate::core::router::RouteNode;
-use crate::middleware::RidgeMiddleware;
+use crate::core::router::tree::Path;
+use crate::core::router::handlers::ApiHandler;
+use crate::core::router::registry::RouteNode;
 use crate::builder::CodeRouteBuilder;
+use crate::core::router::logic::{DataLoader, Middleware};
+
 
 pub struct ApiDefinition {
-    pub segment: PathSegment,
+    pub path: Path,
     pub handlers: HashMap<Method, Arc<dyn ApiHandler>>,
     pub children: Vec<RouteNode>,
-    pub middlewares: Vec<Arc<dyn RidgeMiddleware + Send + Sync>>,
+    pub middlewares: Vec<Arc<dyn Middleware + Send + Sync>>,
     pub extensions: HashMap<String, Value>,
+    pub loaders: Vec<Arc<dyn DataLoader>>,
+    
 }
 
 impl ApiDefinition {
-
-    // Standard Methods
-    // Usage: .get(handler), .post(handler) ...etc
-    apply_shortcut_method_function!(ApiHandler {
-        get     => "GET",
-        post    => "POST",
-        put     => "PUT",
-        delete  => "DELETE",
-        patch   => "PATCH",
-        head    => "HEAD",
-        options => "OPTIONS",
-        connect => "CONNECT",
-        trace   => "TRACE", 
-    });
-
     // Custom Methods
     // Usage: .method("FARHAN", handler)
     pub fn method<H: ApiHandler + 'static>(mut self, verb: &str, handler: H) -> Self {
@@ -47,18 +36,24 @@ impl ApiDefinition {
         self
     }
 
-    pub fn middleware<M: RidgeMiddleware + Send + Sync + 'static>(mut self, middleware: M) -> Self {
+    pub fn middleware<M: Middleware + Send + Sync + 'static>(mut self, middleware: M) -> Self {
         self.middlewares.push(Arc::new(middleware));
+        self
+    }
+
+    pub fn loader<L: DataLoader + 'static>(mut self, loader: L) -> Self {
+        self.loaders.push(Arc::new(loader));
         self
     }
 
     pub fn finish(mut self, builder: &mut CodeRouteBuilder) {
         let node = RouteNode::Api {
-            segment: self.segment,
+            path: self.path,
             handlers: self.handlers,
             children: self.children,
             middlewares: self.middlewares,
             extensions: self.extensions,
+            loaders: self.loaders,
         };
         builder.roots.push(node);
     }

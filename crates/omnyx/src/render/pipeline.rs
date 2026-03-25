@@ -4,20 +4,20 @@ use async_trait::async_trait;
 use axum::{http::HeaderMap, response::Response};
 use serde_json::Value;
 
-use crate::core::RidgeCore;
+use crate::core::OmnyxCore;
 use crate::core::router::metadata::RouteMetadata;
 
 
 #[async_trait]
 pub trait ResponseStrategy: Send + Sync + 'static  {
 
-    async fn applies(&self, headers: &HeaderMap, core: &RidgeCore) -> bool; 
+    async fn applies(&self, headers: &HeaderMap, core: &OmnyxCore) -> bool; 
 
     async fn respond(
         &self,
         inner_html: String,
         metadata: Arc<RouteMetadata>,
-        core: &RidgeCore,
+        core: &OmnyxCore,
         original_response: Response,
     ) -> Response;
 }
