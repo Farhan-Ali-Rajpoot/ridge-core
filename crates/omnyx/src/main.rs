@@ -34,7 +34,7 @@ fn main() {
 
     let renderer = Renderer::new()
         .root_layout_handler(root_layout);
-    
+
     let app = AppBuilder::new()
         .with_config(config)
         .with_router(router)
@@ -45,8 +45,10 @@ fn main() {
     app.run();
 }
 
-
-
+#[derive(serde::Deserialize)]
+pub struct Payload {
+    query: Option<String>,
+}
 
 pub fn home_router() -> Router {
     Router::new()
@@ -81,7 +83,7 @@ pub fn home_router() -> Router {
                     r
                     .page("/[[...slug]]", |page| {
                         page
-                        .handler(|| async move { Err::<&str, &str>("z") })
+                        .handler(|| async move { html! { <div>Parallel Route</div> } })
                         .loader_handler(|| async move { html!{ "Loading Sidebar"} })
                         .error_handler(|| async move { Err::<&str, &str>("z") })
                         .children(|r| {
@@ -99,8 +101,12 @@ pub fn home_router() -> Router {
                     router
                         .page("/", |page| {
                             page
-                            .method("GET", || async move {
-                                html! { "Page" }
+                            .method("GET", |req: Request| async move {
+                                if let Ok(payload) = req.body::<Payload>().await {
+                                    println!("{}", payload.query.unwrap_or("None".into()));
+                                } else {
+                                    println!("Body read failed");
+                                }
                             })
                             .children(|r| {
                                 r

@@ -11,11 +11,11 @@ where
     T: Send + Sync + 'static
 {
     pub(crate) async fn handle_route(&self, session: &mut Session) -> pingora::Result<bool> {
-        let req_header = session.req_header();
-        let path = if req_header.uri.path().len() > 1 {
-            req_header.uri.path().trim_end_matches("/").to_string()
+        let raw_path = session.req_header().uri.path();
+        let path = if raw_path.len() > 1 {
+            raw_path.trim_end_matches("/").to_string()
         } else {
-            req_header.uri.path().to_string()
+            raw_path.to_string()
         };
 
         if path.starts_with("/public") {
@@ -35,8 +35,9 @@ where
         };
 
         let mut req = Request::new(
+            session,
             self.state.user_state.clone(),
-            req_header,
+            // session.req_header(),
             matched.params,
             "req-id",
             metadata,
