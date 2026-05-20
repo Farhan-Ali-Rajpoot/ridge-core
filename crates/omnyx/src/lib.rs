@@ -1,9 +1,8 @@
+pub mod collections;
+mod config;
 mod core;
 mod error;
 mod types;
-pub mod collections;
-mod config;
-
 
 pub use include_dir;
 pub use rscx;
@@ -16,13 +15,16 @@ pub mod router {
 }
 
 pub mod request {
-    pub use crate::core::router::io::request::Request; 
+    pub use crate::core::router::io::request::Request;
+    pub mod kinds {
+        pub use crate::core::router::io::request::kinds::{Api, Page};
+    }
 }
 
 pub mod response {
-    pub use crate::core::router::io::response::Response;
     pub use crate::core::router::io::response::Body;
     pub use crate::core::router::io::response::IntoResponse;
+    pub use crate::core::router::io::response::Response;
 }
 
 pub mod builder {

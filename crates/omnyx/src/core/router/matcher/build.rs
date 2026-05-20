@@ -106,25 +106,9 @@ impl RouteMatcher {
                     };
                     router.resolve(&current_ctx.path, entry)?;
 
-                    // Optional catch‑all expansion
-                    if let Some((base_pattern, full_pattern)) = path.split_optional_catch_all() {
-                        let full_route_path = join_paths(&ctx.path, &full_pattern);
-                        let full_page_endpoint = PageEndpoint {
-                            controllers: controllers.clone(),
-                            loader_controller: loader_controller.clone(),
-                            error_controller: error_controller.clone(),
-                            layouts: current_ctx.layouts.clone(),
-                            metadata: current_ctx.metadata.clone(),
-                            node_id: page_node_id.clone(),
-                        };
-                        let full_entry = RouteEntry {
-                            matched_pattern: full_route_path.clone(),
-                            middlewares: current_ctx.middlewares.clone(),
-                            kind: RouteKind::Page(full_page_endpoint),
-                            node_ids,
-                        };
-                        router.resolve(&full_route_path, full_entry)?;
-                    }
+                    // ========== FIX: REMOVED the faulty optional‑catch‑all expansion ==========
+                    // The pattern `/{*param}` already matches both the base path and any extra segments,
+                    // so the extra registration is unnecessary and would cause a duplicate route error.
                 }
 
                 for child in children {
@@ -207,10 +191,8 @@ impl RouteMatcher {
                 }
 
                 current_ctx.layouts.push(Arc::new(current_layout));
-                // Add this layout's ID to the collected node IDs
                 current_ctx.node_ids.push(node_id.clone());
 
-                // Recurse into normal children
                 for child in children {
                     Self::bake_route_recursive(child, router, current_ctx.clone())?;
                 }
@@ -237,7 +219,6 @@ impl RouteMatcher {
 }
 
 /// Bakes a parallel route tree into a `ParallelRouteMatcher` for a single slot.
-/// `ctx.prefix_id` is the ID of the parent slot container (e.g., "L_home:S_@sidebar").
 fn bake_parallel_route_recursive(
     node: ParallelRouteNode,
     matcher: &mut ParallelRouteMatcher,
@@ -254,7 +235,6 @@ fn bake_parallel_route_recursive(
             let raw_path = path.to_matchit_pattern();
             let full_pattern = if raw_path.is_empty() { "/".to_string() } else { raw_path };
 
-            // ID for a page inside a slot: {prefix_id}:P
             let node_id = format!("{}:P", ctx.prefix_id);
 
             let parallel_route = ParallelRoute {
@@ -267,9 +247,8 @@ fn bake_parallel_route_recursive(
             };
             matcher.resolve(&full_pattern, parallel_route.clone())?;
 
-            if let Some((base_pattern, _)) = path.split_optional_catch_all() {
-                matcher.resolve(&base_pattern, parallel_route)?;
-            }
+            // ========== FIX: REMOVED the faulty optional‑catch‑all expansion ==========
+            // The same fix as in normal route baking – the catch‑all pattern already covers all cases.
 
             for child in children {
                 bake_parallel_route_recursive(child, matcher, ctx.clone())?;
@@ -284,7 +263,6 @@ fn bake_parallel_route_recursive(
             parallel_routes,
             children,
         } => {
-            // ID for a layout inside a slot: {prefix_id}:L_{normalized_path}_{layout_id}
             let relative_norm = normalize_to_segment(&ctx.path);
             let node_id = if ctx.path == "/" {
                 format!("{}:L_{}", ctx.prefix_id, id)
@@ -301,7 +279,6 @@ fn bake_parallel_route_recursive(
                 node_id: node_id.clone(),
             };
 
-            // Nested parallel slots inside this layout – they will get their own slot containers
             for (slot_name, nodes) in parallel_routes {
                 let nested_slot_id = format!("{}:S_{}", node_id, slot_name);
                 let mut slot_matcher = ParallelRouteMatcher::new();

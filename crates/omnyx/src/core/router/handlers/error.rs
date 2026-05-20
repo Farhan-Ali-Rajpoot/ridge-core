@@ -1,15 +1,15 @@
 use std::marker::PhantomData;
 
-use crate::core::router::io::{Response, Request};
+use crate::core::router::io::{request::{Request, kinds::Page}, Response};
 use crate::types::BoxFuture;
 
 
 pub trait ErasedErrorComponent: Send + Sync + 'static {
-    fn call_erased(&self, request: Request) -> BoxFuture<Response>;
+    fn call_erased(&self, request: Request<Page>) -> BoxFuture<Response>;
 }
 
 pub trait ErrorComponent<Args>: Clone + Send + Sync + 'static {
-    fn call(self, request: Request) -> impl Future<Output = Response> + Send;
+    fn call(self, request: Request<Page>) -> impl Future<Output = Response> + Send;
 }
 
 #[derive(Debug)]
@@ -23,10 +23,10 @@ where
     H: ErrorComponent<Args> + Clone + Send + Sync + 'static,
     Args: Send + Sync + 'static,
 {
-    fn call_erased(&self, request: Request) -> BoxFuture<Response> {
+    fn call_erased(&self, request: Request<Page>) -> BoxFuture<Response> {
         Box::pin(self.handler.clone().call(request))
     }
 }
 
-impl_handler!(ErrorComponent, call; );
-impl_handler!(ErrorComponent, call; t1);
+impl_handler!(ErrorComponent, call, Page; );
+impl_handler!(ErrorComponent, call, Page; t1);

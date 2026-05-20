@@ -1,5 +1,7 @@
 pub mod core;
-pub mod types;
+pub mod kinds;
+pub mod connection;
 
 pub use core::*;
-pub use types::*;
+pub use kinds::*;
+pub use connection::*;

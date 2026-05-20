@@ -1,25 +1,28 @@
 use crate::core::router::io::{Request};
 use crate::core::router::handlers::{LayoutProps};
+use crate::core::router::io::request::kinds::Page;
 
 
-
-pub trait FromContext: Sized {
-    fn from_request(request: &Request) -> impl Future<Output = Self> + Send;
+pub trait FromContext<K>: Sized {
+    fn from_request(request: &Request<K>) -> impl std::future::Future<Output = Self> + Send;
 }
 
 
-impl FromContext for Request {
-    fn from_request(request: &Request) -> impl Future<Output = Self> + Send {
+impl<K: Clone + Send + Sync + 'static> FromContext<K> for Request<K> {
+    fn from_request(request: &Request<K>) -> impl Future<Output = Self> + Send {
+        // Create an owned copy outside or inside the async block
+        let owned_request = request.clone();
         async move {
-            request.clone()
+            owned_request
         }
     }
 }
 
-impl FromContext for LayoutProps {
-    fn from_request(request: &Request) -> impl Future<Output = Self> + Send {
+impl FromContext<Page> for LayoutProps {
+    fn from_request(request: &Request<Page>) -> impl std::future::Future<Output = Self> + Send {
         async move {
-            request.layout_props.read().clone()
+            // Acquires the single lock we built inside Request<Page>
+            request.layout_props().clone()
         }
     }
 }

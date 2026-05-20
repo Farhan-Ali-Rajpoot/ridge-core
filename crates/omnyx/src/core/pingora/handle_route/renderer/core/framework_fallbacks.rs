@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
-use crate::core::{ErasedLayoutComponent, LayoutComponentWrapper, LayoutProps, Request};
+use crate::core::router::handlers::{ErasedLayoutComponent, LayoutComponentWrapper, LayoutProps};
+use crate::core::router::io::request::{Request, Page};
 
 use super::templates::{NOT_FOUND_PAGE, ERROR_PAGE};
 
@@ -16,7 +17,7 @@ pub struct FrameworkFallbacks {
 impl Default for FrameworkFallbacks {
     fn default() -> Self {
         let default_root = Arc::new(LayoutComponentWrapper {
-            handler: async move |req: Request, props: LayoutProps| {
+            handler: async move |req: Request<Page>, props: LayoutProps| {
                 rscx::html! {
                     <!DOCTYPE html>
                     <html lang="en">

@@ -1,20 +1,20 @@
 use std::sync::Arc;
 
-use crate::core::router::io::{Request};
+use crate::core::router::io::request::Connection;
 
 pub trait Middleware: std::fmt::Debug + Send + Sync + 'static {
     fn handle(
         &self,
-        request: Request,
+        request: Connection,
         next: Next,
     );
 }
 
 impl<F> Middleware for F 
 where 
-    F: Fn(Request, Next) + std::fmt::Debug + Send + Sync + 'static
+    F: Fn(Connection, Next) + std::fmt::Debug + Send + Sync + 'static
 {
-    fn handle(&self, request: Request, next: Next) {
+    fn handle(&self, request: Connection, next: Next) {
         (self)(request, next);
     }
 }
@@ -35,11 +35,11 @@ impl<S: Clone> Clone for MiddlewareService<S> {
 
 
 pub struct Next {
-    pub(crate) inner: Box<dyn FnOnce(&Request)>
+    pub(crate) inner: Box<dyn FnOnce(&Connection)>
 }
 
 impl Next {
-    pub fn run(mut self, request: &Request)  {
+    pub fn run(mut self, request: &Connection)  {
         (self.inner)(request);
     }
 }

@@ -1,15 +1,15 @@
 use std::marker::PhantomData;
 
-use crate::core::router::io::{Request, Response};
+use crate::core::router::io::{request::{Request, kinds::Page}, Response};
 use crate::types::BoxFuture;
 
 pub trait ErasedSpecialComponent: Send + Sync + 'static {
-    fn call_erased(&self, request: Request) -> BoxFuture<Response>;
+    fn call_erased(&self, request: Request<Page>) -> BoxFuture<Response>;
 }
 
 
 pub trait SpecialComponent<Args>: Clone + Send + Sync + 'static {
-    fn call(self, request: Request) -> BoxFuture<Response>;
+    fn call(self, request: Request<Page>) -> BoxFuture<Response>;
 }
 
 pub struct SpecialHandlerWrapper<H, Args> {
@@ -23,10 +23,10 @@ where
     H: SpecialComponent<Args> + Clone + Send + Sync + 'static,
     Args: Send + Sync + 'static,
 {
-    fn call_erased(&self, request: Request) -> BoxFuture<Response> {
+    fn call_erased(&self, request: Request<Page>) -> BoxFuture<Response> {
         Box::pin(self.handler.clone().call(request))
     }
 }
 
-impl_handler!(SpecialComponent, call; );
-impl_handler!(SpecialComponent, call; t1);
+impl_handler!(SpecialComponent, call, Page; );
+impl_handler!(SpecialComponent, call, Page; t1);

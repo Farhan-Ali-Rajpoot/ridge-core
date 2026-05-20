@@ -8,13 +8,12 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use crate::collections::LinearMap;
 use crate::core::renderer::Renderer;
 use crate::core::{Layout, ParallelRouteMatcher};
-use crate::core::pingora::PingoraAdapter;
 use crate::core::router::handlers::{
     ErasedErrorComponent, ErasedLayoutComponent, ErasedLoaderComponent, ErasedPageComponent,
     LayoutProps,
 };
-use crate::core::router::io::{Body, Request, Response};
-use crate::core::{PageEndpoint, RenderedParallelRoute, RouteKind, RouteMetadata};
+use crate::core::router::io::{Body, request::{Request, kinds::Page}, Response};
+use crate::core::{PageEndpoint, RenderedParallelRoute,};
 
 
 
@@ -28,7 +27,7 @@ pub enum MainComponent {
 }
 
 impl MainComponent {
-    pub async fn call(&self, req: Request) -> Response {
+    pub async fn call(&self, req: Request<Page>) -> Response {
         if let Ok(res) = std::panic::AssertUnwindSafe(async {
             match self {
                 Self::Page(p) => p.call_erased(req).await,
@@ -67,7 +66,7 @@ struct LayoutCapture {
     children_html: String,
     parallel_map: LinearMap<String, RenderedParallelRoute>,
     error_controller: Option<Arc<dyn ErasedErrorComponent>>,
-    req: Request,
+    req: Request<Page>,
 }
 
 impl LayoutCapture {
@@ -89,7 +88,7 @@ impl Renderer {
     pub(crate) async fn render_page(
         &self,
         session: &mut Session,
-        req: &mut Request,
+        req: &mut Request<Page>,
         page: &PageEndpoint,
     ) -> pingora::Result<bool> {
         let mut tasks = Vec::new();
@@ -256,7 +255,7 @@ impl Renderer {
 
     pub(crate) async fn render_parallel_slot(
         &self,
-        req: &mut Request,
+        req: &mut Request<Page>,
         matcher: &ParallelRouteMatcher,
         slot_name: &str,
         relative_path: &str,
@@ -377,7 +376,7 @@ impl Renderer {
 
     pub(crate) async fn execute_slot(
         &self,
-        req: &mut Request,
+        req: &mut Request<Page>,
         main: &Option<MainComponent>,
         loader: &Option<Arc<dyn ErasedLoaderComponent>>,
         error: &Option<Arc<dyn ErasedErrorComponent>>,
@@ -428,7 +427,7 @@ impl Renderer {
         self.try_error_boundary(req, error).await
     }
 
-    pub(crate) async fn get_loader_html(&self, loader: &Arc<dyn ErasedLoaderComponent>, req: &Request) -> String {
+    pub(crate) async fn get_loader_html(&self, loader: &Arc<dyn ErasedLoaderComponent>, req: &Request<Page>) -> String {
         let l_res = std::panic::AssertUnwindSafe(loader.call_erased(req.clone()))
             .catch_unwind()
             .await
@@ -442,7 +441,7 @@ impl Renderer {
 
     pub(crate) async fn try_error_boundary(
         &self,
-        req: &Request,
+        req: &Request<Page>,
         error: &Option<Arc<dyn ErasedErrorComponent>>,
     ) -> SlotOutcome {
         if let Some(e_ctr) = error {

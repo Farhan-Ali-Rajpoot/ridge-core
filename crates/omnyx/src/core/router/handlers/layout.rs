@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use crate::collections::LinearMap;
-use crate::core::router::io::{Response, Request};
+use crate::core::router::io::{request::{Request, kinds::Page}, Response};
 use crate::types::BoxFuture;
 
 #[derive(Debug, Clone, Default)]
@@ -26,11 +26,11 @@ impl LayoutProps {
     }
 }
 pub trait ErasedLayoutComponent: Send + Sync + 'static {
-    fn call_erased(&self, request: Request) -> BoxFuture<Response>;
+    fn call_erased(&self, request: Request<Page>) -> BoxFuture<Response>;
 }
 
 pub trait LayoutComponent<Args>: Clone + Send + Sync + 'static {
-    fn call(self, request: Request) -> BoxFuture<Response>;
+    fn call(self, request: Request<Page>) -> BoxFuture<Response>;
 }
 
 pub struct LayoutComponentWrapper<H, Args> {
@@ -43,11 +43,11 @@ where
     H: LayoutComponent<Args> + Clone + Send + Sync + 'static,
     Args: Send + Sync + Clone + 'static,
 {
-    fn call_erased(&self, request: Request) -> BoxFuture<Response> {
+    fn call_erased(&self, request: Request<Page>) -> BoxFuture<Response> {
         self.handler.clone().call(request)
     }
 }
 
-impl_handler!(LayoutComponent, call; );
-impl_handler!(LayoutComponent, call; t1);
-impl_handler!(LayoutComponent, call; t1, t2);
+impl_handler!(LayoutComponent, call, Page; );
+impl_handler!(LayoutComponent, call, Page; t1);
+impl_handler!(LayoutComponent, call, Page; t1, t2);

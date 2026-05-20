@@ -1,13 +1,18 @@
 
 use omnyx::{
-    builder::{AppBuilder, Config, Renderer}, collections::LinearMap, include_dir::{self, Dir, include_dir}, request::Request, router::{LayoutProps, RenderedParallelRoute, Router}, rscx::html
+    builder::{AppBuilder, Config, Renderer}, 
+    request::{Request, kinds::Page}, 
+    router::{LayoutProps, RenderedParallelRoute, Router}, 
+    collections::LinearMap, 
+    include_dir::{self, Dir, include_dir}, 
+    rscx::html,
 };
 
 static PUBLIC_DIR: Dir<'static> = include_dir!("$CARGO_MANIFEST_DIR/assets");
 
 fn main() {
 
-    let root_layout = async move |req: Request, props: LayoutProps| {
+    let root_layout = async move |req: Request<Page>, props: LayoutProps| {
         omnyx::rscx::html! {
             <!DOCTYPE html>
                 <html lang="en">
@@ -99,33 +104,25 @@ pub fn home_router() -> Router {
                 })
                 .children(|router| {
                     router
-                        .page("/", |page| {
+                        .page("/user", |page| {
                             page
-                            .method("GET", |req: Request| async move {
-                                if let Ok(payload) = req.body::<Payload>().await {
-                                    println!("{}", payload.query.unwrap_or("None".into()));
-                                } else {
-                                    println!("Body read failed");
-                                }
+                            .method("GET", |req: Request<Page>| async move {
+                              "User Page"
                             })
                             .children(|r| {
                                 r
-                                .page("/user", |page|  {
-                                    page
-                                    .method("GET", || async move {
-                                        tokio::time::sleep(std::time::Duration::from_secs(3)).await; Err::<&str, &str>("E")
-                                    })
-                                    .loader_handler(|| async move {
-                                        "Loading User"
-                                    })
-                                    .error_handler(|| async move {
-                                        "ErroredUser----"
-                                    })
-                                })
-                                .page("/admin", |page| {
-                                    page
-                                    .method("GET", || async move {
-                                        html! { Admin }
+                                .page("/[[...menu]]", |p| {
+                                    p.method("GET", |req: Request<Page>| async move {
+                                        println!("Cookie: {}", req.cookie("user").unwrap_or("None"));
+                                        println!("User-Agent: {}", req.header("User-Agent").unwrap_or("None"));
+                                        println!("Query: {}", req.query("query").unwrap_or(std::borrow::Cow::Borrowed("None")));
+                                        println!("Param: {}", req.param_first("menu").unwrap_or("None"));
+                                        for (key, value) in req.params_raw() {
+                                            println!("Key: {}", key);
+                                            for i in value {
+                                                println!("Param: {}", i);
+                                            }
+                                        }
                                     })
                                 })
                             })
