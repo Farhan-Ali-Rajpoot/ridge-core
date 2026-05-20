@@ -1,8 +1,8 @@
 [package]
 name = "omnyx"
-version = "0.0.15"
+version = "0.0.16"
 edition = "2024"
-description = "Omnyx - Web Framework With Nextjs like Routing"
+description = "Omnyx - Web Framework With Nextjs like Routing and Fast backend setup"
 license = "MIT"
 repository = "https://github.com/Farhan-Ali-Rajpoot/ridge-core/crates/omnyx"
 readme = "README.md"
